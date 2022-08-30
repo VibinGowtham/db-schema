@@ -1,0 +1,160 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model interview {
+  interview_id       Int         @id @default(autoincrement()) @db.UnsignedInt
+  interview_name     String      @db.VarChar(150)
+  college_name       String      @db.VarChar(150)
+  college_spoc_name  String      @db.VarChar(150)
+  college_spoc_email String?     @db.VarChar(150)
+  candidate_ids      String      @db.VarChar(150)
+  interviewer_ids    String      @db.VarChar(150)
+  round_ids          String      @db.VarChar(150)
+  start_date         DateTime    @db.Timestamp(0)
+  end_date           DateTime    @db.Timestamp(0)
+  admin              String      @db.VarChar(150)
+  moderator          String      @db.VarChar(150)
+  college_address    String      @db.VarChar(150)
+  status             String?     @db.VarChar(150)
+  channel_id         String      @db.VarChar(150)
+  email_alert        String?     @db.VarChar(150)
+  slack              String?     @db.VarChar(150)
+  candidate          candidate[]
+  round              round[]
+}
+
+model candidate {
+  candidate_id      Int                 @id @default(autoincrement()) @db.UnsignedInt
+  interview_id      Int                 @db.UnsignedInt
+  first_name        String              @db.VarChar(150)
+  last_name         String              @db.VarChar(150)
+  register_number   String              @db.VarChar(150)
+  department        String              @db.VarChar(150)
+  github_link       String              @db.VarChar(150)
+  mobile_number     String              @db.MediumText
+  resume_link       String?             @db.VarChar(150)
+  email             String              @db.VarChar(150)
+  interview         interview           @relation(fields: [interview_id], references: [interview_id])
+  round_performance round_performance[]
+  slot              slot[]
+
+  @@index([interview_id], name: "interview_id")
+}
+
+model interviewer {
+  employee_id                              Int     @id @default(autoincrement()) @db.UnsignedInt
+  first_name                               String  @db.VarChar(150)
+  last_name                                String  @db.VarChar(150)
+  mobile_number                            String  @db.MediumText
+  webex_link                               String  @db.VarChar(150)
+  slack_id                                 String  @db.VarChar(150)
+  role                                     String  @db.VarChar(150)
+  email                                    String  @db.VarChar(150)
+  category                                 String? @db.VarChar(150)
+  status                                   String  @db.VarChar(150)
+  permissions                              String? @db.VarChar(150)
+  panel_interviewerTopanel_interviewer_id1 panel[] @relation("interviewerTopanel_interviewer_id1")
+  panel_interviewerTopanel_interviewer_id2 panel[] @relation("interviewerTopanel_interviewer_id2")
+  panel_interviewerTopanel_interviewer_id3 panel[] @relation("interviewerTopanel_interviewer_id3")
+}
+
+model panel {
+  panel_id                                       Int          @id @default(autoincrement()) @db.UnsignedInt
+  round_id                                       Int          @db.UnsignedInt
+  panel_name                                     String       @db.VarChar(150)
+  slots                                          String       @db.VarChar(150)
+  interviewer_id1                                Int          @db.UnsignedInt
+  interviewer_id2                                Int?         @db.UnsignedInt
+  interviewer_id3                                Int?         @db.UnsignedInt
+  interviewer_interviewerTopanel_interviewer_id1 interviewer  @relation("interviewerTopanel_interviewer_id1", fields: [interviewer_id1], references: [employee_id])
+  interviewer_interviewerTopanel_interviewer_id2 interviewer? @relation("interviewerTopanel_interviewer_id2", fields: [interviewer_id2], references: [employee_id])
+  interviewer_interviewerTopanel_interviewer_id3 interviewer? @relation("interviewerTopanel_interviewer_id3", fields: [interviewer_id3], references: [employee_id])
+  round                                          round        @relation(fields: [round_id], references: [round_id])
+  slot                                           slot[]
+
+  @@index([interviewer_id1], name: "fk_interviewer_id1")
+  @@index([interviewer_id2], name: "fk_interviewer_id2")
+  @@index([interviewer_id3], name: "fk_interviewer_id3")
+  @@index([round_id], name: "round_id")
+}
+
+model round {
+  round_id          Int                 @id @default(autoincrement()) @db.UnsignedInt
+  round_details_id  Int                 @db.UnsignedInt
+  interview_id      Int                 @db.UnsignedInt
+  interviewer_ids   String              @db.VarChar(150)
+  panels            String              @db.VarChar(150)
+  round_name        String              @db.VarChar(150)
+  date              DateTime            @db.Date
+  start_time        DateTime            @db.Timestamp(0)
+  end_time          DateTime            @db.Timestamp(0)
+  panel_count       Int
+  duration          Int
+  break             String?             @db.VarChar(150)
+  attributes        String              @db.VarChar(150)
+  interview         interview           @relation(fields: [interview_id], references: [interview_id])
+  round_details     round_details       @relation(fields: [round_details_id], references: [round_details_id])
+  panel             panel[]
+  round_performance round_performance[]
+
+  @@index([interview_id], name: "interview_id")
+  @@index([round_details_id], name: "round_id")
+}
+
+model round_details {
+  round_details_id  Int     @id @default(autoincrement()) @db.UnsignedInt
+  panel             Boolean
+  round_name        String  @db.VarChar(150)
+  round_description String? @db.VarChar(150)
+  attributes        String? @db.VarChar(150)
+  round             round[]
+}
+
+model slot {
+  slot_id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  candidate_id    Int       @db.UnsignedInt
+  panel_id        Int       @db.UnsignedInt
+  slot_start_time DateTime  @db.Timestamp(0)
+  slot_end_time   DateTime  @db.Timestamp(0)
+  webex_link      String    @db.VarChar(150)
+  name            String?   @db.VarChar(150)
+  candidate       candidate @relation(fields: [candidate_id], references: [candidate_id])
+  panel           panel     @relation(fields: [panel_id], references: [panel_id])
+
+  @@index([candidate_id], name: "candidate_id")
+  @@index([panel_id], name: "panel_id")
+}
+
+model round_performance {
+  round_performance_id Int       @id @default(autoincrement()) @db.UnsignedInt
+  candidate_id         Int       @db.UnsignedInt
+  round_id             Int       @db.UnsignedInt
+  interview_status     String    @db.VarChar(150)
+  next_round           String    @db.VarChar(150)
+  attributes           String    @db.VarChar(10000)
+  final_status         String    @db.VarChar(150)
+  candidate            candidate @relation(fields: [candidate_id], references: [candidate_id])
+  round                round     @relation(fields: [round_id], references: [round_id])
+
+  @@index([candidate_id], name: "candidate_id")
+  @@index([round_id], name: "round_id")
+}
+
+model round_template {
+  template_id          Int    @id @default(autoincrement()) @db.UnsignedInt
+  round_ids            String @db.VarChar(150)
+  template_name        String @db.VarChar(150)
+  template_description String @db.VarChar(150)
+}
+
+model sys_var{
+  name  String  @id @db.VarChar(150)
+  value String? @db.VarChar(150)
+}
